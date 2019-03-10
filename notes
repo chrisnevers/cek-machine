@@ -1,0 +1,61 @@
+CEK Machine
+
+E = Environment
+K = Continuation
+
+Σ = ∘
+    | Σ [ x → v ]
+
+Σ like a list of pairs (x, v) or hashtable
+
+x, Σ, k             →   v, Σ, k where [x → v] ⋲ Σ
+M N, Σ, K           →   N, Σ, Fn (N, k)
+variables bound during turning M -> V, are able to be used in evaluating N
+everything is global in a way
+V, Σ, Fn (N, k)     →   N, Σ, Ar (V, K)
+V, Σ, Ar (λx.M, k)  →   M, Σ[x → v], k   // save work for later
+
+This is broken CEK
+
+((λx.\y.8+y) 7) x)
+
+a            @
+b        @       x  <- f
+c    λx      7      <- g
+d    λy
+e    +
+  7       y
+
+x is unbound
+broken cek will turn it into 15
+
+a, ∘, ret
+b, ∘, fn(f, ret)
+c, ∘, fn(g, fn (f, ret))
+g, ∘, ar(c, fn (f, ret))
+d, ∘[x→7], fn (f, ret)
+f, ∘[x→7], ar (d, ret)
+7, ∘[x→7], ar (d, ret)
+e, ∘[x→7][y→7], ret
+8+y, ⤒, ret
+y, ⤒, pr (+, <8>, <>, ret)
+7, ⤒, ⤒
+15, ⤒, ret
+
+Correct CEK Machine
+
+K = ret | Fn (N, Σ, K) | Ar (V, K)
+
+x, Σ, k → v, Σ, k where [x → v] ⋲ Σ
+M N, Σ, K → M, Σ, Fn (N, Σ, K)
+V, Σ, Fn (N,Σ', K) → N, Σ', Ar (V, K)
+V, Σ, Ar (λx.m, k) → M, ⚈[x → v], k WRONG
+
+OLD
+v := b | λx.m
+NOW
+v := b
+    | clo (λx.M, Σ) func with subs that would've happened
+
+λx.m, Σ, K → clo(λx.m, Σ), Σ, K
+V, Σ, Ar (Clo(λx.m, Σ'), K) → M, Σ'[x → v], K
