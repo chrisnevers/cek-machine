@@ -41,13 +41,13 @@ let eval t = match t with
     begin match o with
     | "+" ->
       let value = List.fold_left (fun acc (Con i) -> acc + i) 0 (b::bs) in
-      ST (Con value, e, k)
+      ST (Con value, EMt, k)
     | _ -> cek_error "Unknown primitive operation"
     end
   | _ -> cek_error ("Unknown state: " ^ str_st t)
 
 let rec eval_program s = match s with
-  | ST (v, _, Mt) when is_v v -> ST (v, EMt, Mt)
+  | ST (v, _, Mt) when is_v v -> s
   | _ -> eval_program (eval s)
 
 let run s = eval_program @@ ST (s, EMt, Mt)
